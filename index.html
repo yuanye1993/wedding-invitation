@@ -366,11 +366,11 @@
     }
 
     .intro-text {
-      font-size: 1rem;
+      font-size: 0.95rem;
       color: #6a6258;
       margin: 18px 0 10px;
       line-height: 1.9;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
       font-weight: 300;
     }
 
@@ -937,7 +937,7 @@
       <div class="detail-item">
         <span class="detail-label">地点</span>
         <span class="detail-value">酒都饭店 · 4楼华宴宴会厅</span>
-        <span class="detail-address">宜宾市翠屏区水东门</span>
+        <span class="detail-address">宜宾市翠屏区专署街50号</span>
         <!-- 改为按钮，点击弹出三选一 -->
         <button class="nav-btn" id="openNavModal">📍 导航前往</button>
         <span style="font-size:0.65rem; color:#b8a88a; margin-top:4px; letter-spacing:1px;">请选择您使用的导航应用</span>
@@ -1006,13 +1006,13 @@
         }
       });
 
-      // 宜宾酒都饭店坐标
+      // 宜宾酒都饭店 — 使用搜索定位，自动匹配最准确位置
       window.openMap = function(type) {
         var urls = {
-          amap:    'https://uri.amap.com/navigation?to=104.643,28.771,酒都饭店&mode=car&callnative=1',
-          baidu:   'https://api.map.baidu.com/marker?location=28.771,104.643&title=酒都饭店&content=宜宾酒都饭店&output=html',
-          qqmap:   'https://apis.map.qq.com/uri/v1/routeplan?type=drive&to=酒都饭店&tocoord=28.771,104.643&coord_type=1',
-          applemap: 'https://maps.apple.com/?q=酒都饭店&ll=28.771,104.643'
+          amap:     'https://uri.amap.com/search?keyword=酒都饭店&city=宜宾&callnative=1',
+          baidu:    'https://api.map.baidu.com/geocoder?address=宜宾市翠屏区专署街50号酒都饭店&output=html',
+          qqmap:    'https://apis.map.qq.com/uri/v1/search?keyword=酒都饭店&region=宜宾',
+          applemap: 'https://maps.apple.com/?q=酒都饭店+宜宾市翠屏区专署街50号'
         };
         window.open(urls[type], '_blank');
         overlay.classList.remove('show');

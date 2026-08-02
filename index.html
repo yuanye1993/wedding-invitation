@@ -11,15 +11,18 @@
   <meta property="og:type" content="website">
   <meta property="og:locale" content="zh_CN">
   <meta property="og:site_name" content="新婚请帖">
-  <meta property="og:image" content="https://yuanye1993.github.io/cover.jpg">
+  <!-- ★ 微信分享卡片封面（换成你的国内域名后生效） ★ -->
+  <meta property="og:image" content="https://wedding.ybtzkg.com/cover.jpg">
   <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="500">
+  <meta property="og:image:height" content="500">
   <!-- 微信专用 -->
   <meta itemprop="name" content="张起溯 & 王榆瑞 · 新婚游园会暨答谢宴">
   <meta itemprop="description" content="2026年9月13日 · 宜宾酒都饭店 · 诚挚邀请您参加新婚游园会暨答谢宴">
-  <meta itemprop="image" content="https://yuanye1993.github.io/cover.jpg">
+  <meta itemprop="image" content="https://wedding.ybtzkg.com/cover.jpg">
   <meta name="wechat:title" content="张起溯 & 王榆瑞 · 新婚游园会暨答谢宴">
   <meta name="wechat:description" content="2026年9月13日 · 宜宾酒都饭店 · 诚挚邀请您参加新婚游园会暨答谢宴">
-  <meta name="wechat:image" content="https://yuanye1993.github.io/cover.jpg">
+  <meta name="wechat:image" content="https://wedding.ybtzkg.com/cover.jpg">
 
   <!-- 字体：国内加速镜像（内容与原版 Noto Serif SC + Playfair Display 完全一致） -->
   <link rel="preconnect" href="https://fonts.googleapis.cn" crossorigin>
@@ -817,6 +820,7 @@
     .nav-map-btn.amap { border-color: #d4c5ae; }
     .nav-map-btn.baidu { border-color: #c4d0de; }
     .nav-map-btn.qqmap { border-color: #bdd4c5; }
+    .nav-map-btn.applemap { border-color: #b8a88a; }
     .nav-modal-cancel {
       display: inline-block;
       margin-top: 10px;
@@ -991,6 +995,10 @@
         腾讯地图
       </button>
       <span class="nav-map-sub">跳转至腾讯地图 App / 网页</span>
+      <button class="nav-map-btn applemap" onclick="openMap('applemap')">
+        苹果地图
+      </button>
+      <span class="nav-map-sub">跳转至 Apple Maps（iOS 自动唤起 App）</span>
       <button class="nav-modal-cancel" onclick="closeNavModal()">取消</button>
     </div>
   </div>
@@ -1019,21 +1027,23 @@
       // 宜宾酒都饭店坐标
       window.openMap = function(type) {
         var urls = {
-          amap:  'https://uri.amap.com/navigation?to=104.643,28.771,酒都饭店&mode=car&callnative=1',
-          baidu: 'https://api.map.baidu.com/direction?destination=latlng:28.771,104.643|name:酒都饭店&coord_type=gcj02&mode=driving',
-          qqmap: 'https://apis.map.qq.com/uri/v1/routeplan?type=drive&to=酒都饭店&tocoord=28.771,104.643&coord_type=1'
+          amap:    'https://uri.amap.com/navigation?to=104.643,28.771,酒都饭店&mode=car&callnative=1',
+          baidu:   'https://api.map.baidu.com/marker?location=28.771,104.643&title=酒都饭店&content=宜宾酒都饭店&output=html',
+          qqmap:   'https://apis.map.qq.com/uri/v1/routeplan?type=drive&to=酒都饭店&tocoord=28.771,104.643&coord_type=1',
+          applemap: 'https://maps.apple.com/?q=酒都饭店&ll=28.771,104.643'
         };
         window.open(urls[type], '_blank');
         overlay.classList.remove('show');
       };
     })();
 
-    // ========== 回执提交逻辑 ==========
-    (function() {
-      // 请将下方替换为你的 Google Apps Script Web App URL
-      // 部署方法见 backend/google-apps-script.gs
-      var WEBHOOK_URL = '';
+    // ========== 回执提交逻辑（Supabase 后端） ==========
+    // 注册 supabase.com（GitHub 一键登录）→ 新建项目 → SQL Editor 粘贴 backend/setup.sql 运行
+    // 然后将 Project URL 和 anon public key 填入下方
+    var SUPABASE_URL = '';
+    var SUPABASE_KEY = '';
 
+    (function() {
       var nameInput = document.getElementById('guestName');
       var contactInput = document.getElementById('guestContact');
       var attendanceRadios = document.getElementsByName('attendance');
@@ -1060,6 +1070,17 @@
         return '出席';
       }
 
+      function onSuccess(guestName) {
+        feedback.textContent = guestName + '，感谢您的回执！期待与您相见！';
+        feedback.style.color = '#7e725c';
+        submitBtn.textContent = '已提交';
+        submitBtn.style.backgroundColor = '#f7f3ed';
+        nameInput.disabled = true;
+        contactInput.disabled = true;
+        for (var i = 0; i < attendanceRadios.length; i++) attendanceRadios[i].disabled = true;
+        guestsCountInput.disabled = true;
+      }
+
       updateGuestsCountVisibility();
       for (var i = 0; i < attendanceRadios.length; i++) {
         attendanceRadios[i].addEventListener('change', updateGuestsCountVisibility);
@@ -1067,27 +1088,17 @@
 
       submitBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        
+
         var guestName = nameInput.value.trim();
-        if (!guestName) {
-          feedback.textContent = '请填写您的姓名。';
-          feedback.style.color = '#b88a6a';
-          return;
-        }
+        if (!guestName) { feedback.textContent = '请填写您的姓名。'; feedback.style.color = '#b88a6a'; return; }
 
         var guestContact = contactInput.value.trim();
-        if (!guestContact) {
-          feedback.textContent = '请填写您的联系方式，以便我们后续确认。';
-          feedback.style.color = '#b88a6a';
-          return;
-        }
+        if (!guestContact) { feedback.textContent = '请填写您的联系方式，以便我们后续确认。'; feedback.style.color = '#b88a6a'; return; }
 
         var attendance = getSelectedAttendance();
         var guestsCount = attendance === '缺席' ? 0 : parseInt(guestsCountInput.value, 10);
         if (attendance === '出席' && (isNaN(guestsCount) || guestsCount < 1)) {
-          feedback.textContent = '请填写有效的同行人数。';
-          feedback.style.color = '#b88a6a';
-          return;
+          feedback.textContent = '请填写有效的同行人数。'; feedback.style.color = '#b88a6a'; return;
         }
 
         submitBtn.disabled = true;
@@ -1099,58 +1110,39 @@
           contact: guestContact,
           attendance: attendance,
           guests: guestsCount,
-          timestamp: new Date().toISOString(),
           event: '张起溯&王榆瑞 新婚游园会'
         };
 
-        function onSuccess() {
-          feedback.textContent = guestName + '，感谢您的回执！期待与您相见！';
-          feedback.style.color = '#7e725c';
-          submitBtn.textContent = '已提交';
-          submitBtn.style.backgroundColor = '#f7f3ed';
-          nameInput.disabled = true;
-          contactInput.disabled = true;
-          for (var i = 0; i < attendanceRadios.length; i++) attendanceRadios[i].disabled = true;
-          guestsCountInput.disabled = true;
-        }
-
-        if (WEBHOOK_URL && WEBHOOK_URL.length > 5) {
-          fetch(WEBHOOK_URL, {
+        if (SUPABASE_URL && SUPABASE_KEY) {
+          fetch(SUPABASE_URL + '/rest/v1/rsvp_submissions', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: [formData] })
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': 'Bearer ' + SUPABASE_KEY,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify(formData)
           })
-          .then(function(response) {
-            if (response.ok) { onSuccess(); }
+          .then(function(res) {
+            if (res.ok) { onSuccess(guestName); }
             else {
-              console.warn('RSVP 返回非 200:', response.status);
-              feedback.textContent = guestName + '，回执已记录（本地模式）。';
-              feedback.style.color = '#7e725c';
-              submitBtn.textContent = '已记录';
-              submitBtn.disabled = true;
+              console.warn('RSVP 提交失败:', res.status);
+              feedback.textContent = guestName + '，提交遇到问题，请稍后重试。';
+              feedback.style.color = '#b88a6a';
+              submitBtn.disabled = false;
+              submitBtn.textContent = '重新提交';
             }
           })
-          .catch(function(err) {
-            console.warn('RSVP 请求失败:', err);
-            feedback.textContent = guestName + '，回执已记录（离线模式）。';
-            feedback.style.color = '#7e725c';
-            submitBtn.textContent = '已记录';
-            submitBtn.style.backgroundColor = '#f7f3ed';
-            nameInput.disabled = true;
-            contactInput.disabled = true;
-            for (var i = 0; i < attendanceRadios.length; i++) attendanceRadios[i].disabled = true;
-            guestsCountInput.disabled = true;
+          .catch(function() {
+            feedback.textContent = guestName + '，网络异常，您的回执暂未提交，请稍后重试。';
+            feedback.style.color = '#b88a6a';
+            submitBtn.disabled = false;
+            submitBtn.textContent = '重新提交';
           });
         } else {
-          // 未配置后端时：本地记录模式
-          feedback.textContent = guestName + '，回执已记录。期待与您相见！';
-          feedback.style.color = '#7e725c';
-          submitBtn.textContent = '已记录';
-          submitBtn.style.backgroundColor = '#f7f3ed';
-          nameInput.disabled = true;
-          contactInput.disabled = true;
-          for (var i = 0; i < attendanceRadios.length; i++) attendanceRadios[i].disabled = true;
-          guestsCountInput.disabled = true;
+          // 未配置 Supabase：本地记录模式，防止宾客看到报错
+          onSuccess(guestName);
         }
       });
     })();

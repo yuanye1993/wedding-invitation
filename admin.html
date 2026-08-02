@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>回执管理 · 张起溯 & 王榆瑞</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: #faf7f2;
+      color: #4a453d;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 800px;
+      padding: 40px 24px;
+    }
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 400;
+      text-align: center;
+      color: #7e725c;
+      letter-spacing: 2px;
+      margin-bottom: 32px;
+    }
+
+    /* ===== 密码门 ===== */
+    .gate {
+      background: #fff;
+      border: 1px solid #e5dcd0;
+      border-radius: 12px;
+      padding: 48px 32px;
+      text-align: center;
+      box-shadow: 0 2px 20px rgba(0,0,0,.04);
+    }
+    .gate p { font-size: 0.95rem; color: #9a8e7a; margin-bottom: 20px; }
+    .gate input {
+      width: 200px;
+      padding: 12px 16px;
+      border: 1px solid #d4c8b0;
+      border-radius: 8px;
+      font-size: 1rem;
+      text-align: center;
+      letter-spacing: 6px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .gate input:focus { border-color: #b8a88a; }
+    .gate button {
+      display: block;
+      margin: 16px auto 0;
+      padding: 10px 40px;
+      background: #7e725c;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: background .2s;
+    }
+    .gate button:hover { background: #6b604c; }
+    .gate .error { color: #c0392b; font-size: 0.85rem; margin-top: 12px; display: none; }
+
+    /* ===== 仪表板 ===== */
+    .dashboard { display: none; }
+    .stats {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      flex: 1;
+      min-width: 120px;
+      background: #fff;
+      border: 1px solid #e5dcd0;
+      border-radius: 12px;
+      padding: 20px 16px;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,.03);
+    }
+    .stat-card .num {
+      font-size: 2rem;
+      font-weight: 500;
+      color: #7e725c;
+    }
+    .stat-card .label {
+      font-size: 0.78rem;
+      color: #b8a88a;
+      margin-top: 4px;
+      letter-spacing: 1px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .toolbar button {
+      padding: 8px 20px;
+      background: #7e725c;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: background .2s;
+    }
+    .toolbar button:hover { background: #6b604c; }
+    .toolbar .last-update {
+      font-size: 0.75rem;
+      color: #b8a88a;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,.03);
+    }
+    thead { background: #f7f3ed; }
+    th {
+      text-align: left;
+      padding: 14px 16px;
+      font-weight: 500;
+      font-size: 0.82rem;
+      color: #7e725c;
+      letter-spacing: 1px;
+      border-bottom: 1px solid #e5dcd0;
+    }
+    td {
+      padding: 12px 16px;
+      font-size: 0.88rem;
+      border-bottom: 1px solid #f0ebe0;
+      color: #4a453d;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 500;
+    }
+    .badge-attend { background: #e8f0e0; color: #5a7a4a; }
+    .badge-absent { background: #f5e8e0; color: #a08070; }
+    .empty-row td {
+      text-align: center;
+      padding: 48px 16px;
+      color: #b8a88a;
+      font-size: 0.9rem;
+    }
+    .loading td { text-align:center; padding:32px; color:#b8a88a; }
+
+    /* 设置面板 */
+    .setup-panel {
+      display: none;
+      background: #fff;
+      border: 1px solid #e5dcd0;
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 28px;
+      box-shadow: 0 2px 20px rgba(0,0,0,.04);
+    }
+    .setup-panel h3 { font-weight: 400; margin-bottom: 16px; color: #7e725c; }
+    .setup-panel label {
+      display: block;
+      font-size: 0.78rem;
+      color: #9a8e7a;
+      margin: 12px 0 4px;
+      letter-spacing: 1px;
+    }
+    .setup-panel input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #d4c8b0;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      outline: none;
+      font-family: monospace;
+    }
+    .setup-panel input:focus { border-color: #b8a88a; }
+    .setup-panel button {
+      margin-top: 20px;
+      padding: 10px 32px;
+      background: #7e725c;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      letter-spacing: 1px;
+    }
+    .setup-panel .hint {
+      font-size: 0.75rem;
+      color: #b8a88a;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 600px) {
+      .container { padding: 24px 12px; }
+      th, td { padding: 10px 8px; font-size: 0.8rem; }
+      .gate { padding: 32px 20px; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>回执管理后台</h1>
+
+  <!-- 密码门 -->
+  <div class="gate" id="gate">
+    <p>请输入管理密码</p>
+    <input type="password" id="pwdInput" maxlength="8" placeholder="••••" autofocus>
+    <button onclick="checkPassword()">进入</button>
+    <div class="error" id="pwdError">密码错误</div>
+  </div>
+
+  <!-- 设置面板 -->
+  <div class="setup-panel" id="setupPanel">
+    <h3>配置 Supabase 数据库</h3>
+    <p style="font-size:0.82rem;color:#9a8e7a;margin-bottom:16px;">
+      注册 <a href="https://supabase.com" target="_blank" style="color:#7e725c;">supabase.com</a>（用 GitHub 一键登录）→ 新建项目 → SQL Editor 粘贴 backend/setup.sql 运行
+    </p>
+    <label>Supabase URL</label>
+    <input type="text" id="supaUrl" placeholder="https://xxxxx.supabase.co">
+    <label>Supabase Anon Key</label>
+    <input type="text" id="supaKey" placeholder="eyJhbGciOi...">
+    <button onclick="saveSetup()">保存并连接</button>
+    <div class="hint">密钥保存在浏览器本地，不会上传到任何服务器</div>
+  </div>
+
+  <!-- 仪表板 -->
+  <div class="dashboard" id="dashboard">
+    <div class="stats">
+      <div class="stat-card">
+        <div class="num" id="statTotal">0</div>
+        <div class="label">总回执</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="statAttend">0</div>
+        <div class="label">出席</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="statAbsent">0</div>
+        <div class="label">缺席</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="statGuests">0</div>
+        <div class="label">出席人数</div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button onclick="loadData()">刷新数据</button>
+      <button onclick="exportCSV()">导出 CSV</button>
+      <span class="last-update" id="lastUpdate"></span>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>姓名</th>
+          <th>联系方式</th>
+          <th>出席</th>
+          <th>同行</th>
+          <th>时间</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <tr class="loading"><td colspan="5">加载中...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// ========== 密码 ==========
+var MASTER_PWD = '0913'; // 可自行修改
+
+function checkPassword() {
+  var input = document.getElementById('pwdInput').value;
+  if (input === MASTER_PWD) {
+    document.getElementById('gate').style.display = 'none';
+    initApp();
+  } else {
+    document.getElementById('pwdError').style.display = 'block';
+    document.getElementById('pwdInput').value = '';
+  }
+}
+
+document.getElementById('pwdInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') checkPassword();
+});
+
+// ========== 数据层 ==========
+function getConfig() {
+  return {
+    url: localStorage.getItem('rsvp_supa_url') || '',
+    key: localStorage.getItem('rsvp_supa_key') || ''
+  };
+}
+
+function initApp() {
+  var cfg = getConfig();
+  if (!cfg.url || !cfg.key) {
+    document.getElementById('setupPanel').style.display = 'block';
+    document.getElementById('dashboard').style.display = 'block';
+    loadData();
+  } else {
+    document.getElementById('dashboard').style.display = 'block';
+    loadData();
+  }
+}
+
+function saveSetup() {
+  var url = document.getElementById('supaUrl').value.trim();
+  var key = document.getElementById('supaKey').value.trim();
+  if (!url || !key) { alert('请填写完整 URL 和 Key'); return; }
+  localStorage.setItem('rsvp_supa_url', url);
+  localStorage.setItem('rsvp_supa_key', key);
+  document.getElementById('setupPanel').style.display = 'none';
+  loadData();
+}
+
+function loadData() {
+  var cfg = getConfig();
+  if (!cfg.url || !cfg.key) {
+    // 未配置，显示空状态
+    renderTable([], true);
+    return;
+  }
+
+  var tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '<tr class="loading"><td colspan="5">加载中...</td></tr>';
+
+  fetch(cfg.url + '/rest/v1/rsvp_submissions?select=*&order=created_at.desc', {
+    headers: {
+      'apikey': cfg.key,
+      'Authorization': 'Bearer ' + cfg.key,
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    renderTable(data || []);
+  })
+  .catch(function(err) {
+    console.error('加载失败:', err);
+    document.getElementById('tableBody').innerHTML =
+      '<tr><td colspan="5" style="text-align:center;padding:32px;color:#c0392b;">连接失败，请检查 Supabase 配置</td></tr>';
+  });
+}
+
+function renderTable(rows, noConfig) {
+  var tbody = document.getElementById('tableBody');
+  var total = rows.length;
+  var attend = 0, absent = 0, guests = 0;
+  rows.forEach(function(r) {
+    if (r.attendance === '出席') { attend++; guests += (r.guests || 0); }
+    else { absent++; }
+  });
+
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statAttend').textContent = attend;
+  document.getElementById('statAbsent').textContent = absent;
+  document.getElementById('statGuests').textContent = guests;
+  document.getElementById('lastUpdate').textContent =
+    '更新时间：' + new Date().toLocaleTimeString('zh-CN');
+
+  if (noConfig) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">请先在上方配置 Supabase 数据库连接</td></tr>';
+    return;
+  }
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">暂无回执数据</td></tr>';
+    return;
+  }
+
+  var html = '';
+  rows.forEach(function(r) {
+    var badge = r.attendance === '出席'
+      ? '<span class="badge badge-attend">出席</span>'
+      : '<span class="badge badge-absent">缺席</span>';
+    var time = (r.created_at || '').replace('T', ' ').substring(0, 19);
+    html += '<tr>' +
+      '<td>' + esc(r.name) + '</td>' +
+      '<td>' + esc(r.contact) + '</td>' +
+      '<td>' + badge + '</td>' +
+      '<td>' + (r.guests || 0) + '</td>' +
+      '<td>' + time + '</td>' +
+      '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function exportCSV() {
+  var cfg = getConfig();
+  if (!cfg.url || !cfg.key) { alert('请先配置数据库'); return; }
+
+  fetch(cfg.url + '/rest/v1/rsvp_submissions?select=*&order=created_at.desc', {
+    headers: {
+      'apikey': cfg.key,
+      'Authorization': 'Bearer ' + cfg.key
+    }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(rows) {
+    var csv = '姓名,联系方式,是否出席,同行人数,提交时间\n';
+    rows.forEach(function(r) {
+      csv += '"' + (r.name||'') + '","' + (r.contact||'') + '","' + (r.attendance||'') + '","' + (r.guests||0) + '","' + (r.created_at||'') + '"\n';
+    });
+    var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '婚礼回执_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+  });
+}
+</script>
+</body>
+</html>

@@ -1006,13 +1006,13 @@
         }
       });
 
-      // 宜宾酒都饭店 — 使用搜索定位，自动匹配最准确位置
+      // 宜宾酒都饭店 — 精确坐标：104.627365, 28.770142
       window.openMap = function(type) {
         var urls = {
-          amap:     'https://uri.amap.com/search?keyword=酒都饭店&city=宜宾&callnative=1',
-          baidu:    'https://api.map.baidu.com/geocoder?address=宜宾市翠屏区专署街50号酒都饭店&output=html',
-          qqmap:    'https://apis.map.qq.com/uri/v1/search?keyword=酒都饭店&region=宜宾',
-          applemap: 'https://maps.apple.com/?q=酒都饭店+宜宾市翠屏区专署街50号'
+          amap:     'https://uri.amap.com/navigation?to=104.627365,28.770142,酒都饭店&mode=car&callnative=1',
+          baidu:    'https://api.map.baidu.com/marker?location=28.770142,104.627365&title=酒都饭店&content=宜宾市翠屏区专署街50号&output=html',
+          qqmap:    'https://apis.map.qq.com/uri/v1/routeplan?type=drive&to=酒都饭店&tocoord=28.770142,104.627365&coord_type=1',
+          applemap: 'https://maps.apple.com/?q=酒都饭店&ll=28.770142,104.627365'
         };
         window.open(urls[type], '_blank');
         overlay.classList.remove('show');

@@ -948,32 +948,14 @@
 
     <div class="rsvp-note">回执</div>
     
-    <div class="rsvp-form" id="rsvpForm">
-      <div class="form-row">
-        <label class="form-label" for="guestName">您的姓名</label>
-        <input type="text" id="guestName" class="form-input" placeholder="请输入姓名" autocomplete="off">
-      </div>
-      <div class="form-row">
-        <label class="form-label" for="guestContact">联系方式</label>
-        <input type="text" id="guestContact" class="form-input" placeholder="手机号码 / 微信号" autocomplete="off">
-      </div>
-      <div class="form-row">
-        <label class="form-label">是否出席</label>
-        <div class="radio-group">
-          <label class="radio-option">
-            <input type="radio" name="attendance" value="出席" checked> 出席
-          </label>
-          <label class="radio-option">
-            <input type="radio" name="attendance" value="缺席"> 缺席
-          </label>
-        </div>
-      </div>
-      <div class="form-row" id="guestsCountRow">
-        <label class="form-label" for="guestsCount">同行人数（含本人）</label>
-        <input type="number" id="guestsCount" class="form-input" placeholder="例如：2" min="1" value="1">
-      </div>
-      <button class="submit-btn" id="submitRsvp">提交回执</button>
-      <div class="form-feedback" id="feedbackMessage"></div>
+    <div class="rsvp-form" id="rsvpForm" style="text-align:center;">
+      <p style="font-size:15px;color:#7e725c;margin-bottom:20px;line-height:1.8;letter-spacing:1px;">
+        点击下方按钮填写回执<br>
+        期待您的光临 ✨
+      </p>
+      <a href="https://docs.qq.com/form/page/DZFpxY25DZktjVEZI" target="_blank" class="submit-btn" style="text-decoration:none;padding:14px 48px;font-size:16px;display:inline-block;letter-spacing:2px;">
+        填写回执
+      </a>
     </div>
 
     <span class="watermark">FOREVER & ALWAYS</span>
@@ -1037,115 +1019,8 @@
       };
     })();
 
-    // ========== 回执提交逻辑（Supabase 后端） ==========
-    // 注册 supabase.com（GitHub 一键登录）→ 新建项目 → SQL Editor 粘贴 backend/setup.sql 运行
-    // 然后将 Project URL 和 anon public key 填入下方
-    var SUPABASE_URL = 'https://ssvzhfnainmcktywdcl.supabase.co';
-    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzdnpoZm5haW5tY2tidHl3ZGNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2NTg2ODQsImV4cCI6MjEwMTIzNDY4NH0.sKvGDeNtSqBoNi4ljTuNgFDjY2pQabsjoAporX3UA6I';
-
-    (function() {
-      var nameInput = document.getElementById('guestName');
-      var contactInput = document.getElementById('guestContact');
-      var attendanceRadios = document.getElementsByName('attendance');
-      var guestsCountInput = document.getElementById('guestsCount');
-      var guestsCountRow = document.getElementById('guestsCountRow');
-      var submitBtn = document.getElementById('submitRsvp');
-      var feedback = document.getElementById('feedbackMessage');
-
-      function updateGuestsCountVisibility() {
-        var attendanceValue = getSelectedAttendance();
-        if (attendanceValue === '缺席') {
-          guestsCountRow.style.display = 'none';
-          guestsCountInput.value = '0';
-        } else {
-          guestsCountRow.style.display = 'flex';
-          if (guestsCountInput.value === '0') guestsCountInput.value = '1';
-        }
-      }
-
-      function getSelectedAttendance() {
-        for (var i = 0; i < attendanceRadios.length; i++) {
-          if (attendanceRadios[i].checked) return attendanceRadios[i].value;
-        }
-        return '出席';
-      }
-
-      function onSuccess(guestName) {
-        feedback.textContent = guestName + '，感谢您的回执！期待与您相见！';
-        feedback.style.color = '#7e725c';
-        submitBtn.textContent = '已提交';
-        submitBtn.style.backgroundColor = '#f7f3ed';
-        nameInput.disabled = true;
-        contactInput.disabled = true;
-        for (var i = 0; i < attendanceRadios.length; i++) attendanceRadios[i].disabled = true;
-        guestsCountInput.disabled = true;
-      }
-
-      updateGuestsCountVisibility();
-      for (var i = 0; i < attendanceRadios.length; i++) {
-        attendanceRadios[i].addEventListener('change', updateGuestsCountVisibility);
-      }
-
-      submitBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-
-        var guestName = nameInput.value.trim();
-        if (!guestName) { feedback.textContent = '请填写您的姓名。'; feedback.style.color = '#b88a6a'; return; }
-
-        var guestContact = contactInput.value.trim();
-        if (!guestContact) { feedback.textContent = '请填写您的联系方式，以便我们后续确认。'; feedback.style.color = '#b88a6a'; return; }
-
-        var attendance = getSelectedAttendance();
-        var guestsCount = attendance === '缺席' ? 0 : parseInt(guestsCountInput.value, 10);
-        if (attendance === '出席' && (isNaN(guestsCount) || guestsCount < 1)) {
-          feedback.textContent = '请填写有效的同行人数。'; feedback.style.color = '#b88a6a'; return;
-        }
-
-        submitBtn.disabled = true;
-        submitBtn.textContent = '提交中...';
-        feedback.textContent = '';
-
-        var formData = {
-          name: guestName,
-          contact: guestContact,
-          attendance: attendance,
-          guests: guestsCount,
-          event: '张起溯&王榆瑞 新婚游园会'
-        };
-
-        if (SUPABASE_URL && SUPABASE_KEY) {
-          fetch(SUPABASE_URL + '/rest/v1/rsvp_submissions', {
-            method: 'POST',
-            headers: {
-              'apikey': SUPABASE_KEY,
-              'Authorization': 'Bearer ' + SUPABASE_KEY,
-              'Content-Type': 'application/json',
-              'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify(formData)
-          })
-          .then(function(res) {
-            if (res.ok) { onSuccess(guestName); }
-            else {
-              console.warn('RSVP 提交失败:', res.status);
-              feedback.textContent = guestName + '，提交遇到问题，请稍后重试。';
-              feedback.style.color = '#b88a6a';
-              submitBtn.disabled = false;
-              submitBtn.textContent = '重新提交';
-            }
-          })
-          .catch(function() {
-            feedback.textContent = guestName + '，网络异常，您的回执暂未提交，请稍后重试。';
-            feedback.style.color = '#b88a6a';
-            submitBtn.disabled = false;
-            submitBtn.textContent = '重新提交';
-          });
-        } else {
-          // 未配置 Supabase：本地记录模式，防止宾客看到报错
-          onSuccess(guestName);
-        }
-      });
-    })();
+    // ========== 回执入口：腾讯文档收集表 ==========
+    // 宾客点击按钮跳转到腾讯文档填写回执，数据自动汇总到腾讯文档表格
   </script>
 </body>
 </html>

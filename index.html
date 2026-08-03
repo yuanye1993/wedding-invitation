@@ -842,6 +842,106 @@
       margin-top: -2px;
       margin-bottom: 8px;
     }
+
+    /* ===== 悬浮音乐盒（黑胶唱片风格，与请帖复古质感统一） ===== */
+    .music-box {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 998;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      cursor: pointer;
+      background:
+        radial-gradient(circle,
+          #b8a88a 0 22%,
+          #3b3a3a 23% 24%,
+          #2c2a25 25% 44%,
+          #3b3a3a 45% 46%,
+          #2c2a25 47% 68%,
+          #3b3a3a 69% 70%,
+          #2c2a25 71% 100%);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.18), inset 0 1px 2px rgba(255,255,255,0.15);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: box-shadow 0.3s ease, transform 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .music-box::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: #fdfbf7;
+      box-shadow: 0 0 0 2px rgba(253,251,247,0.15);
+    }
+    .music-box .note {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      color: #fdfbf7;
+      line-height: 1;
+      opacity: 0.92;
+      font-style: italic;
+      position: relative;
+      z-index: 1;
+    }
+    .music-box.playing {
+      animation: disc-spin 8s linear infinite;
+    }
+    .music-box:hover {
+      box-shadow: 0 6px 20px rgba(0,0,0,0.22), inset 0 1px 2px rgba(255,255,255,0.2);
+    }
+    .music-box:active {
+      transform: scale(0.94);
+    }
+    @keyframes disc-spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    /* 音乐盒提示气泡 */
+    .music-tip {
+      position: fixed;
+      top: 28px;
+      right: 78px;
+      z-index: 998;
+      background: rgba(253,251,247,0.96);
+      border: 1px solid #d9cebc;
+      color: #7e725c;
+      font-family: 'Noto Serif SC', serif;
+      font-size: 0.72rem;
+      letter-spacing: 1px;
+      padding: 6px 12px;
+      border-radius: 2px;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      opacity: 0;
+      transform: translateX(8px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      pointer-events: none;
+    }
+    .music-tip.show {
+      opacity: 0.92;
+      transform: translateX(0);
+    }
+    .music-tip::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: -6px;
+      transform: translateY(-50%);
+      border: 6px solid transparent;
+      border-left-color: #d9cebc;
+      border-right: 0;
+    }
+    @media (max-width: 420px) {
+      .music-box { width: 44px; height: 44px; top: 14px; right: 14px; }
+      .music-tip { top: 24px; right: 66px; font-size: 0.65rem; }
+    }
   </style>
 </head>
 <body>
@@ -985,6 +1085,15 @@
     </div>
   </div>
 
+  <!-- ===== 悬浮音乐盒（黑胶唱片） ===== -->
+  <audio id="bgm" loop preload="auto">
+    <source src="bgm.mp3" type="audio/mpeg">
+  </audio>
+  <span class="music-tip" id="musicTip">点击停止音乐</span>
+  <div class="music-box" id="musicBox" role="button" aria-label="播放或暂停背景音乐" tabindex="0">
+    <span class="note">♪</span>
+  </div>
+
   <script>
     // ========== 导航弹窗逻辑 ==========
     (function() {
@@ -1021,6 +1130,94 @@
 
     // ========== 回执入口：腾讯文档收集表 ==========
     // 宾客点击按钮跳转到腾讯文档填写回执，数据自动汇总到腾讯文档表格
+
+    // ========== 背景音乐控制（自动播放 + 悬浮音乐盒） ==========
+    (function() {
+      var bgm = document.getElementById('bgm');
+      var musicBox = document.getElementById('musicBox');
+      var musicTip = document.getElementById('musicTip');
+      var playing = false;
+      var tipTimer = null;
+
+      function showTip(text, ms) {
+        if (text) musicTip.textContent = text;
+        musicTip.classList.add('show');
+        clearTimeout(tipTimer);
+        if (ms) tipTimer = setTimeout(function() {
+          musicTip.classList.remove('show');
+        }, ms);
+      }
+
+      function setPlaying(on) {
+        playing = on;
+        if (on) {
+          musicBox.classList.add('playing');
+          musicTip.textContent = '点击停止音乐';
+        } else {
+          musicBox.classList.remove('playing');
+          musicTip.textContent = '点击播放音乐';
+        }
+      }
+
+      function tryPlay() {
+        var p = bgm.play();
+        if (p && typeof p.then === 'function') {
+          p.then(function() { setPlaying(true); })
+           .catch(function() { /* 浏览器拦截，等待用户交互 */ });
+        } else {
+          setPlaying(true);
+        }
+      }
+
+      function togglePlay() {
+        if (playing) {
+          bgm.pause();
+          setPlaying(false);
+        } else {
+          tryPlay();
+        }
+      }
+
+      musicBox.addEventListener('click', function() {
+        togglePlay();
+        showTip(null, 1800);
+      });
+      musicBox.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          musicBox.click();
+        }
+      });
+
+      // 尝试自动播放
+      tryPlay();
+
+      // 浏览器拦截兜底：首次任意交互时再次尝试
+      function firstInteract() {
+        if (!playing) tryPlay();
+        document.removeEventListener('click', firstInteract);
+        document.removeEventListener('touchstart', firstInteract);
+        document.removeEventListener('touchend', firstInteract);
+      }
+      document.addEventListener('click', firstInteract);
+      document.addEventListener('touchstart', firstInteract);
+      document.addEventListener('touchend', firstInteract);
+
+      // 微信内自动播放兜底
+      document.addEventListener('WeixinJSBridgeReady', function() {
+        if (!playing) tryPlay();
+      });
+      if (typeof window.WeixinJSBridge === 'object' && window.WeixinJSBridge && window.WeixinJSBridge.invoke) {
+        window.WeixinJSBridge.invoke('getNetworkType', {}, function() {
+          if (!playing) tryPlay();
+        });
+      }
+
+      // 进入页面后短暂提示一次
+      setTimeout(function() {
+        if (!playing) showTip('轻触开启音乐', 2500);
+      }, 2200);
+    })();
   </script>
 </body>
 </html>

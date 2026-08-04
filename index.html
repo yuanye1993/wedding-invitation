@@ -531,6 +531,110 @@
       font-weight: 400;
     }
 
+    /* ===== 日程表样式 —— 时间轴交错布局 ===== */
+    .schedule-list {
+      width: 100%;
+      margin-top: 10px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 中间竖线 */
+    .schedule-list::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 8px;
+      bottom: 8px;
+      width: 1px;
+      background: #d9cebc;
+      transform: translateX(-50%);
+    }
+
+    .schedule-item {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      position: relative;
+      padding: 8px 0;
+      min-height: 24px;
+    }
+
+    /* 中间圆点（始终在竖线上） */
+    .schedule-item::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 14px;
+      width: 6px;
+      height: 6px;
+      background: #b8a88a;
+      border-radius: 50%;
+      transform: translateX(-50%);
+      z-index: 1;
+    }
+
+    /* 内容块 & 占位 */
+    .schedule-block,
+    .schedule-gap {
+      width: 44%;
+    }
+
+    .schedule-block {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 奇数项（第1,3,5,7项）：内容在左边，右对齐靠中心线 */
+    .schedule-item.left .schedule-block {
+      padding-right: 14px;
+      text-align: right;
+      align-items: flex-end;
+    }
+
+    /* 偶数项（第2,4,6,8项）：内容在右边，左对齐靠中心线 */
+    .schedule-item.right .schedule-block {
+      padding-left: 14px;
+      text-align: left;
+      align-items: flex-start;
+    }
+
+    .schedule-time {
+      font-family: 'Playfair Display', 'Times New Roman', serif;
+      font-size: 0.78rem;
+      font-weight: 500;
+      font-style: italic;
+      color: #8b7e6a;
+      letter-spacing: 0.5px;
+      line-height: 1.4;
+      display: block;
+    }
+
+    .schedule-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 0.82rem;
+      font-weight: 400;
+      color: #4a453d;
+      letter-spacing: 1px;
+      line-height: 1.4;
+    }
+
+    .schedule-desc {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 0.72rem;
+      font-weight: 300;
+      color: #9b8e7a;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    /* 左边描述保持右对齐，靠近中心线 */
+    .schedule-item.left .schedule-desc {
+      text-align: right;
+    }
+
     .detail-address {
       font-size: 0.85rem;
       color: #7e725c;
@@ -765,6 +869,34 @@
       }
       .garden-item-title {
         font-size: 0.8rem;
+      }
+      .schedule-block,
+      .schedule-gap {
+        width: 44%;
+      }
+      .schedule-item.left .schedule-block {
+        padding-right: 10px;
+      }
+      .schedule-item.right .schedule-block {
+        padding-left: 10px;
+      }
+      .schedule-time {
+        font-size: 0.72rem;
+      }
+      .schedule-title {
+        font-size: 0.76rem;
+      }
+      .schedule-desc {
+        font-size: 0.68rem;
+      }
+      .schedule-time {
+        font-size: 0.72rem;
+      }
+      .schedule-title {
+        font-size: 0.76rem;
+      }
+      .schedule-desc {
+        font-size: 0.68rem;
       }
     }
 
@@ -1031,8 +1163,78 @@
 
     <div class="details">
       <div class="detail-item">
-        <span class="detail-label">游园 & 答谢宴</span>
-        <span class="detail-value">上午 10:00 开始</span>
+        <span class="detail-label">游园会暨答谢宴日程安排</span>
+        <div class="schedule-list">
+          <!-- 第1项：左边 -->
+          <div class="schedule-item left">
+            <div class="schedule-block">
+              <span class="schedule-time">10:00</span>
+              <div class="schedule-title">开始礼宾</div>
+              <div class="schedule-desc">棋牌室、游园区<br>（零食铺）开放</div>
+            </div>
+            <div class="schedule-gap"></div>
+          </div>
+          <!-- 第2项：右边 -->
+          <div class="schedule-item right">
+            <div class="schedule-gap"></div>
+            <div class="schedule-block">
+              <span class="schedule-time">11:30</span>
+              <div class="schedule-title">嘉宾就座</div>
+              <div class="schedule-desc">准备观摩</div>
+            </div>
+          </div>
+          <!-- 第3项：左边 -->
+          <div class="schedule-item left">
+            <div class="schedule-block">
+              <span class="schedule-time">11:40</span>
+              <div class="schedule-title">新人上台</div>
+              <div class="schedule-desc">《致辞》</div>
+            </div>
+            <div class="schedule-gap"></div>
+          </div>
+          <!-- 第4项：右边 -->
+          <div class="schedule-item right">
+            <div class="schedule-gap"></div>
+            <div class="schedule-block">
+              <span class="schedule-time">11:50</span>
+              <div class="schedule-title">抽奖环节</div>
+              <div class="schedule-desc">《杠上开花》</div>
+            </div>
+          </div>
+          <!-- 第5项：左边 -->
+          <div class="schedule-item left">
+            <div class="schedule-block">
+              <span class="schedule-time">12:10</span>
+              <div class="schedule-title">致谢退场</div>
+              <div class="schedule-desc">抛洒娃娃</div>
+            </div>
+            <div class="schedule-gap"></div>
+          </div>
+          <!-- 第6项：右边 -->
+          <div class="schedule-item right">
+            <div class="schedule-gap"></div>
+            <div class="schedule-block">
+              <span class="schedule-time">12:15</span>
+              <div class="schedule-title">午宴开餐</div>
+            </div>
+          </div>
+          <!-- 第7项：左边 -->
+          <div class="schedule-item left">
+            <div class="schedule-block">
+              <span class="schedule-time">12:45 - 17:30</span>
+              <div class="schedule-title">自由活动</div>
+            </div>
+            <div class="schedule-gap"></div>
+          </div>
+          <!-- 第8项：右边 -->
+          <div class="schedule-item right">
+            <div class="schedule-gap"></div>
+            <div class="schedule-block">
+              <span class="schedule-time">17:30</span>
+              <div class="schedule-title">晚宴开餐</div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="detail-item">
         <span class="detail-label">地点</span>
